@@ -1,134 +1,811 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>Clustering & Anomalieerkennung</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.73.0/build/stlite.css"
-    />
-    <style>
-        #loading-screen {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: #1a1a2e;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            color: #e0e0e0;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-        }
-        #loading-screen h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            color: #64b5f6;
-        }
-        #loading-screen p {
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
-            color: #90a4ae;
-        }
-        .spinner {
-            width: 60px;
-            height: 60px;
-            border: 5px solid #2a2a4a;
-            border-top: 5px solid #64b5f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 1.5rem;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        #load-status {
-            font-size: 0.9rem;
-            color: #78909c;
-        }
-    </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Clustering & Anomalieerkennung</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f8f9fa;color:#212121}
+.header{background:linear-gradient(135deg,#1a237e,#283593);color:#fff;padding:18px 32px;display:flex;align-items:center;gap:18px}
+.header h1{font-size:1.5rem;font-weight:600}
+.header span{font-size:.95rem;color:#bbdefb}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #e0e0e0;padding:0 16px;overflow-x:auto}
+.tabs button{padding:12px 20px;border:none;background:none;cursor:pointer;font-size:.9rem;color:#546e7a;border-bottom:3px solid transparent;white-space:nowrap;transition:.2s}
+.tabs button:hover{color:#1a237e;background:#f5f5f5}
+.tabs button.active{color:#1a237e;border-bottom-color:#1a237e;font-weight:600}
+.tab-content{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.tab-content.active{display:block}
+.row{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px}
+.col{flex:1;min-width:280px}
+.col-fixed{width:300px;flex-shrink:0}
+.card{background:#fff;border-radius:8px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.1);margin-bottom:16px}
+.card h3{font-size:1rem;color:#1a237e;margin-bottom:10px}
+h2{font-size:1.3rem;color:#1a237e;margin-bottom:16px;border-bottom:2px solid #e8eaf6;padding-bottom:8px}
+label{display:block;font-size:.85rem;color:#455a64;margin-bottom:3px;margin-top:10px}
+select,input[type=range],input[type=number]{width:100%;margin-bottom:2px}
+input[type=range]{cursor:pointer}
+.range-val{font-size:.8rem;color:#78909c;text-align:right}
+.metric-row{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.metric{background:#e8eaf6;border-radius:8px;padding:12px 16px;text-align:center;flex:1;min-width:120px}
+.metric .val{font-size:1.4rem;font-weight:700;color:#1a237e}
+.metric .lbl{font-size:.75rem;color:#546e7a}
+.info{background:#e3f2fd;border-left:4px solid #2196f3;padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0;font-size:.9rem}
+.success{background:#e8f5e9;border-left:4px solid #4caf50;padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0;font-size:.9rem}
+.formula{background:#fafafa;padding:10px;border-radius:6px;font-family:'Courier New',monospace;font-size:.85rem;margin:6px 0}
+.btn{padding:8px 16px;border:none;border-radius:6px;cursor:pointer;font-size:.85rem;background:#1a237e;color:#fff;margin-top:8px}
+.btn:hover{background:#283593}
+.divider{border:none;border-top:1px solid #e0e0e0;margin:20px 0}
+.plot{min-height:400px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-2x2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.grid-2,.grid-3,.grid-2x2,.row{grid-template-columns:1fr;flex-direction:column}.col-fixed{width:100%}}
+table{width:100%;border-collapse:collapse;font-size:.85rem;margin:10px 0}
+th,td{padding:8px 12px;border:1px solid #e0e0e0;text-align:left}
+th{background:#e8eaf6;color:#1a237e;font-weight:600}
+input[type=checkbox]{width:auto;margin-right:6px}
+</style>
 </head>
 <body>
-    <div id="loading-screen">
-        <div class="spinner"></div>
-        <h1>Clustering & Anomalieerkennung</h1>
-        <p>Interaktive Demo wird geladen...</p>
-        <div id="load-status">Python-Umgebung wird initialisiert...</div>
-    </div>
-    <div id="root"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.73.0/build/stlite.js"></script>
-    <script>
-        const filePaths = [
-            "app.py",
-            "utils/__init__.py",
-            "utils/data_gen.py",
-            "utils/metrics.py",
-            "utils/viz.py",
-            "utils/explanations.py",
-            "tabs/__init__.py",
-            "tabs/tab1_data.py",
-            "tabs/tab2_distance.py",
-            "tabs/tab3_scaling.py",
-            "tabs/tab4_dimred.py",
-            "tabs/tab5_clustering.py",
-            "tabs/tab6_anomaly.py",
-        ];
+<div class="header">
+<h1>Clustering & Anomalieerkennung</h1>
+<span>Interaktive Demo — Vom Datenpunkt zur Erkenntnis</span>
+</div>
 
-        async function main() {
-            const statusEl = document.getElementById("load-status");
+<div class="tabs" id="tabBar">
+<button class="active" onclick="showTab(0)">1. Daten-Werkstatt</button>
+<button onclick="showTab(1)">2. Distanz-Explorer</button>
+<button onclick="showTab(2)">3. Skalierung</button>
+<button onclick="showTab(3)">4. Dimensionsreduktion</button>
+<button onclick="showTab(4)">5. Clustering-Arena</button>
+<button onclick="showTab(5)">6. Anomalie-Detektor</button>
+</div>
 
-            // Fetch all Python files
-            statusEl.textContent = "Lade Python-Dateien...";
-            const files = {};
-            await Promise.all(filePaths.map(async (path) => {
-                const resp = await fetch(path);
-                // __init__.py can be empty/missing — treat as empty string
-                if (!resp.ok) {
-                    if (path.endsWith("__init__.py")) {
-                        files[path] = "";
-                        return;
-                    }
-                    throw new Error("Failed to fetch " + path + ": " + resp.status);
-                }
-                files[path] = await resp.text();
-            }));
+<!-- TAB 1: Data -->
+<div class="tab-content active" id="tab0">
+<h2>Daten-Werkstatt</h2>
+<p style="margin-bottom:16px"><b>Synthetische Daten</b> ermöglichen volle Kontrolle über Cluster-Struktur und Rauschen. Die Ground Truth ist bekannt.</p>
+<div class="row">
+<div class="col-fixed card">
+<h3>Parameter</h3>
+<label>Datenform</label>
+<select id="dataShape"><option>Blobs</option><option>Moons</option><option>Circles</option><option>Anisotropic</option></select>
+<label>Anzahl Cluster: <span id="nClustersVal">3</span></label>
+<input type="range" id="nClusters" min="2" max="8" value="3" oninput="$('#nClustersVal').textContent=this.value">
+<label>Datenpunkte: <span id="nSamplesVal">400</span></label>
+<input type="range" id="nSamples" min="100" max="1500" step="50" value="400" oninput="$('#nSamplesVal').textContent=this.value">
+<label>Rauschen: <span id="noiseVal">0.8</span></label>
+<input type="range" id="noise" min="0.1" max="3.0" step="0.1" value="0.8" oninput="$('#noiseVal').textContent=this.value">
+<label>Seed: </label>
+<input type="number" id="seed" value="42" min="0" max="999" style="width:80px">
+<hr style="margin:12px 0">
+<label><input type="checkbox" id="addOutliers"> Outlier injizieren</label>
+<label>Anzahl Outlier: <span id="nOutliersVal">10</span></label>
+<input type="range" id="nOutliers" min="1" max="50" value="10" oninput="$('#nOutliersVal').textContent=this.value">
+<button class="btn" onclick="generateAndRender()" style="width:100%;margin-top:16px">Daten generieren</button>
+</div>
+<div class="col">
+<div id="plotData" class="plot"></div>
+<div class="metric-row" id="dataMetrics"></div>
+</div>
+</div>
+</div>
 
-            statusEl.textContent = "Starte Streamlit im Browser (kann 30-60s dauern)...";
+<!-- TAB 2: Distances -->
+<div class="tab-content" id="tab1">
+<h2>Distanz-Explorer</h2>
+<div class="grid-3" style="margin-bottom:16px">
+<div class="card"><h3>Euklidische Distanz</h3><div class="formula">d = √(Σ(xᵢ - yᵢ)²)</div><p style="font-size:.85rem">Die "Luftlinie" zwischen zwei Punkten.</p></div>
+<div class="card"><h3>Manhattan-Distanz</h3><div class="formula">d = Σ|xᵢ - yᵢ|</div><p style="font-size:.85rem">Die "Taxifahrer-Distanz" — nur entlang der Achsen.</p></div>
+<div class="card"><h3>Cosinus-Ähnlichkeit</h3><div class="formula">sim = (A·B) / (|A|·|B|)</div><p style="font-size:.85rem">Misst den Winkel, nicht den Abstand. 1=gleich, 0=orthogonal.</p></div>
+</div>
+<div class="card">
+<h3>Punkt-Vergleich</h3>
+<div class="row">
+<div class="col"><label>Punkt A (Index)</label><input type="number" id="ptA" value="0" min="0" style="width:100px" onchange="renderDistances()"></div>
+<div class="col"><label>Punkt B (Index)</label><input type="number" id="ptB" value="1" min="0" style="width:100px" onchange="renderDistances()"></div>
+</div>
+<div class="metric-row" id="distMetrics"></div>
+<div id="plotDistPts" class="plot" style="min-height:350px"></div>
+</div>
+<h3 style="margin:16px 0 8px">Distanzmatrix-Heatmaps (Subsample: 40 Punkte)</h3>
+<div class="grid-3">
+<div id="plotHeatEuc"></div>
+<div id="plotHeatMan"></div>
+<div id="plotHeatCos"></div>
+</div>
+</div>
 
-            // Mount stlite
-            stlite.mount(
-                {
-                    requirements: ["plotly", "scikit-learn", "scipy", "matplotlib"],
-                    entrypoint: "app.py",
-                    files: files,
-                },
-                document.getElementById("root")
-            );
+<!-- TAB 3: Scaling -->
+<div class="tab-content" id="tab2">
+<h2>Skalierungs-Labor</h2>
+<p style="margin-bottom:12px"><b>Feature-Skalierung</b> bringt alle Features auf einen vergleichbaren Wertebereich. Ohne Skalierung dominieren Features mit großen Wertebereichen die Distanzberechnung.</p>
+<div class="card">
+<label>Skalierungsmethode</label>
+<select id="scalerType" onchange="renderScaling()">
+<option value="standard">StandardScaler — Mean=0, Std=1</option>
+<option value="minmax">MinMaxScaler — Bereich [0,1]</option>
+<option value="robust">RobustScaler — Median/IQR, robust gegenüber Ausreißern</option>
+</select>
+</div>
+<div class="grid-2">
+<div><h3>Original (unskaliert)</h3><div id="plotScaleBefore" class="plot"></div></div>
+<div><h3 id="scaleAfterTitle">Skaliert (StandardScaler)</h3><div id="plotScaleAfter" class="plot"></div></div>
+</div>
+<h3 style="margin-top:16px">Feature-Statistiken</h3>
+<div id="scaleStats"></div>
+<h3 style="margin-top:16px">Auswirkung auf Distanzen (Punkt 0 → Punkt 1)</h3>
+<div class="metric-row" id="scaleDistMetrics"></div>
+</div>
 
-            // Hide loading screen once stlite renders
-            const observer = new MutationObserver(() => {
-                const stApp = document.querySelector('[data-testid="stAppViewContainer"]');
-                if (stApp) {
-                    document.getElementById("loading-screen").style.display = "none";
-                    observer.disconnect();
-                }
-            });
-            observer.observe(document.getElementById("root"), { childList: true, subtree: true });
+<!-- TAB 4: Dim Reduction -->
+<div class="tab-content" id="tab3">
+<h2>Dimensionsreduktion</h2>
+<div class="grid-2" style="margin-bottom:16px">
+<div class="card">
+<h3>PCA (Principal Component Analysis)</h3>
+<p style="font-size:.85rem">Findet die Achsen maximaler Varianz. Erhält <b>globale Struktur</b>, kann aber nicht-lineare Muster übersehen.</p>
+</div>
+<div class="card">
+<h3>t-SNE</h3>
+<p style="font-size:.85rem">Nicht-lineares Verfahren, das <b>lokale Nachbarschaften</b> erhält. Perplexity steuert die Nachbarschaftsgröße.</p>
+<label>Perplexity: <span id="tsnePerplexVal">30</span></label>
+<input type="range" id="tsnePerplexity" min="5" max="50" value="30" oninput="$('#tsnePerplexVal').textContent=this.value">
+<button class="btn" onclick="renderDimRed()">t-SNE berechnen</button>
+</div>
+</div>
+<div class="grid-2">
+<div><div id="plotPCA" class="plot"></div></div>
+<div><div id="plotTSNE" class="plot"></div></div>
+</div>
+<h3 style="margin-top:16px">PCA: Explained Variance</h3>
+<div id="plotVariance" class="plot" style="min-height:300px"></div>
+</div>
 
-            // Fallback: hide after 90 seconds regardless
-            setTimeout(() => {
-                document.getElementById("loading-screen").style.display = "none";
-            }, 90000);
+<!-- TAB 5: Clustering -->
+<div class="tab-content" id="tab4">
+<h2>Clustering-Arena</h2>
+<h3>A) Optimale Cluster-Anzahl finden</h3>
+<div class="grid-2" style="margin-top:12px">
+<div class="card">
+<p style="font-size:.85rem;margin-bottom:8px">Die <b>Elbow-Methode</b> plottet die Inertia gegen k. Am "Ellbogen" bringt ein weiteres Cluster kaum noch Verbesserung.</p>
+<div id="plotElbow" class="plot" style="min-height:320px"></div>
+</div>
+<div class="card">
+<p style="font-size:.85rem;margin-bottom:8px">Der <b>Silhouette Score</b> misst, wie gut jeder Punkt zu seinem Cluster passt. Nahe +1 = perfekt, 0 = Grenzfall, negativ = falsch.</p>
+<div id="plotSilScore" class="plot" style="min-height:320px"></div>
+</div>
+</div>
+<div class="info" id="clusterRecommendation"></div>
+<hr class="divider">
+<h3>B) K-Means vs. Agglomeratives Clustering</h3>
+<div class="row" style="margin-top:12px">
+<div class="col-fixed card">
+<label>Cluster-Anzahl (k): <span id="kChosenVal">3</span></label>
+<input type="range" id="kChosen" min="2" max="10" value="3" oninput="$('#kChosenVal').textContent=this.value;renderClustering()">
+<label>Linkage-Methode</label>
+<select id="linkageMethod" onchange="renderClustering()">
+<option value="ward">Ward</option><option value="complete">Complete</option><option value="average">Average</option><option value="single">Single</option>
+</select>
+</div>
+<div class="col">
+<div class="grid-2">
+<div><div id="plotKMeans" class="plot" style="min-height:380px"></div></div>
+<div><div id="plotAgglo" class="plot" style="min-height:380px"></div></div>
+</div>
+</div>
+</div>
+<h3>Metriken-Vergleich</h3>
+<div id="clusterMetrics"></div>
+</div>
+
+<!-- TAB 6: Anomaly Detection -->
+<div class="tab-content" id="tab5">
+<h2>Anomalie-Detektor</h2>
+<div id="anomalyGTInfo"></div>
+<h3>A) Cluster-basierte Anomalieerkennung</h3>
+<p style="font-size:.85rem;margin-bottom:8px">Punkte weit vom nächsten Cluster-Zentroid = verdächtig.</p>
+<div class="row">
+<div class="col-fixed card">
+<label>Threshold (Perzentil): <span id="anomThreshVal">95</span></label>
+<input type="range" id="anomThresh" min="80" max="99" value="95" oninput="$('#anomThreshVal').textContent=this.value;renderAnomalies()">
+</div>
+<div class="col"><div id="plotAnomCluster" class="plot" style="min-height:380px"></div></div>
+</div>
+<hr class="divider">
+<h3>B) DBSCAN als Anomalie-Detektor</h3>
+<p style="font-size:.85rem;margin-bottom:8px"><b>DBSCAN</b> findet dichte Regionen. Noise-Punkte = Anomalien.</p>
+<div class="row">
+<div class="col-fixed card">
+<label>eps: <span id="dbEpsVal">1.5</span></label>
+<input type="range" id="dbEps" min="0.1" max="5.0" step="0.1" value="1.5" oninput="$('#dbEpsVal').textContent=this.value;renderAnomalies()">
+<label>min_samples: <span id="dbMinVal">5</span></label>
+<input type="range" id="dbMin" min="2" max="20" value="5" oninput="$('#dbMinVal').textContent=this.value;renderAnomalies()">
+</div>
+<div class="col"><div id="plotAnomDBSCAN" class="plot" style="min-height:380px"></div></div>
+</div>
+<h3 style="margin-top:16px">Methoden-Vergleich</h3>
+<div class="metric-row" id="anomalyMetrics"></div>
+</div>
+
+<script>
+// ============================================================
+//  UTILITIES
+// ============================================================
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const COLORS = ['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854','#ffd92f','#e5c494','#b3b3b3'];
+const plotlyLayout = (title,xlab,ylab,h) => ({title:{text:title,font:{size:14}},xaxis:{title:xlab},yaxis:{title:ylab},template:'plotly_white',height:h||420,margin:{t:40,b:40,l:50,r:20}});
+
+function showTab(i) {
+    $$('.tab-content').forEach((t,j) => t.classList.toggle('active', j===i));
+    $$('.tabs button').forEach((b,j) => b.classList.toggle('active', j===i));
+    if (i===1 && DATA.X) renderDistances();
+    if (i===2 && DATA.X) renderScaling();
+    if (i===3 && DATA.X) renderDimRed();
+    if (i===4 && DATA.X) renderClusterTab();
+    if (i===5 && DATA.X) renderAnomalies();
+}
+
+// Seeded RNG (xoshiro128**)
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t^=t+Math.imul(t^t>>>7,61|t);return((t^t>>>14)>>>0)/4294967296}}
+let rng = mulberry32(42);
+function seedRng(s) { rng = mulberry32(s); }
+function randn() { let u=0,v=0; while(u===0) u=rng(); while(v===0) v=rng(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+// ============================================================
+//  DATA STATE
+// ============================================================
+let DATA = { X:null, y:null, outlierMask:null, nClusters:3, scaled:null, pcaResult:null, tsneResult:null, kmResult:null };
+
+// ============================================================
+//  DATA GENERATION
+// ============================================================
+function makeBlobs(n, k, noise) {
+    const centers = [];
+    for (let i=0;i<k;i++) centers.push([randn()*6, randn()*6]);
+    const X=[], y=[];
+    for (let i=0;i<n;i++) {
+        const c = i%k;
+        X.push([centers[c][0]+randn()*noise, centers[c][1]+randn()*noise]);
+        y.push(c);
+    }
+    return {X,y};
+}
+function makeMoons(n, noise) {
+    const X=[], y=[];
+    const half = Math.floor(n/2);
+    for (let i=0;i<half;i++) {
+        const a = Math.PI*i/half;
+        X.push([Math.cos(a)+randn()*noise, Math.sin(a)+randn()*noise]); y.push(0);
+    }
+    for (let i=0;i<n-half;i++) {
+        const a = Math.PI*i/(n-half);
+        X.push([1-Math.cos(a)+randn()*noise, 0.5-Math.sin(a)+randn()*noise]); y.push(1);
+    }
+    return {X,y};
+}
+function makeCircles(n, noise) {
+    const X=[], y=[];
+    const half = Math.floor(n/2);
+    for (let i=0;i<half;i++) {
+        const a = 2*Math.PI*i/half;
+        X.push([Math.cos(a)+randn()*noise, Math.sin(a)+randn()*noise]); y.push(0);
+    }
+    for (let i=0;i<n-half;i++) {
+        const a = 2*Math.PI*i/(n-half);
+        X.push([0.5*Math.cos(a)+randn()*noise, 0.5*Math.sin(a)+randn()*noise]); y.push(1);
+    }
+    return {X,y};
+}
+function makeAniso(n, k, noise) {
+    const d = makeBlobs(n,k,noise);
+    for (let i=0;i<d.X.length;i++) {
+        const [x,y] = d.X[i];
+        d.X[i] = [x*1.5+y*0.5, x*0.3+y*0.8];
+    }
+    return d;
+}
+function injectOutliers(X, y, nOut) {
+    const mask = new Array(X.length).fill(false);
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    for (const p of X) { minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]); }
+    const cx=(maxX+minX)/2, cy=(maxY+minY)/2, rx=maxX-minX, ry=maxY-minY;
+    for (let i=0;i<nOut;i++) {
+        const a = rng()*2*Math.PI, d = 1.5+rng()*1.5;
+        X.push([cx+Math.cos(a)*rx*d, cy+Math.sin(a)*ry*d]);
+        y.push(-1); mask.push(true);
+    }
+    for (let i=0;i<nOut;i++) mask.unshift(false); // fix: mask should match original length
+    // Actually rebuild mask properly
+    const m2 = new Array(X.length).fill(false);
+    for (let i=X.length-nOut;i<X.length;i++) m2[i]=true;
+    return m2;
+}
+
+function generateAndRender() {
+    const shape = $('#dataShape').value;
+    const k = +$('#nClusters').value;
+    const n = +$('#nSamples').value;
+    const noise = +$('#noise').value;
+    const sd = +$('#seed').value;
+    seedRng(sd);
+    let d;
+    if (shape==='Blobs') d = makeBlobs(n,k,noise);
+    else if (shape==='Moons') d = makeMoons(n,noise);
+    else if (shape==='Circles') d = makeCircles(n,noise);
+    else d = makeAniso(n,k,noise);
+
+    DATA.X = d.X; DATA.y = d.y;
+    DATA.nClusters = (shape==='Moons'||shape==='Circles') ? 2 : k;
+    DATA.outlierMask = new Array(DATA.X.length).fill(false);
+
+    if ($('#addOutliers').checked) {
+        const nOut = +$('#nOutliers').value;
+        DATA.outlierMask = injectOutliers(DATA.X, DATA.y, nOut);
+    }
+    DATA.scaled = null; DATA.pcaResult = null; DATA.tsneResult = null; DATA.kmResult = null;
+    renderDataPlot();
+}
+
+function renderDataPlot() {
+    const X = DATA.X, y = DATA.y, mask = DATA.outlierMask;
+    const traces = [];
+    const labels = [...new Set(y.filter(l=>l>=0))].sort();
+    for (const l of labels) {
+        const idx = y.map((v,i)=>[v,i]).filter(([v])=>v===l).map(([,i])=>i);
+        traces.push({x:idx.map(i=>X[i][0]),y:idx.map(i=>X[i][1]),mode:'markers',marker:{size:5,color:COLORS[l%COLORS.length],opacity:.7},name:'Cluster '+l,type:'scatter'});
+    }
+    if (mask.some(v=>v)) {
+        const oi = mask.map((v,i)=>[v,i]).filter(([v])=>v).map(([,i])=>i);
+        traces.push({x:oi.map(i=>X[i][0]),y:oi.map(i=>X[i][1]),mode:'markers',marker:{size:10,color:'#f44336',symbol:'x'},name:'Outlier',type:'scatter'});
+    }
+    Plotly.newPlot('plotData',traces,plotlyLayout('Synthetische Daten','Feature 1','Feature 2',450),{responsive:true});
+    const nOut = mask.filter(v=>v).length;
+    $('#dataMetrics').innerHTML = `
+        <div class="metric"><div class="val">${X.length}</div><div class="lbl">Datenpunkte</div></div>
+        <div class="metric"><div class="val">2</div><div class="lbl">Features</div></div>
+        <div class="metric"><div class="val">${DATA.nClusters}</div><div class="lbl">Cluster</div></div>
+        <div class="metric"><div class="val">${nOut}</div><div class="lbl">Outlier</div></div>`;
+}
+
+// ============================================================
+//  DISTANCE METRICS
+// ============================================================
+function euclidean(a,b){let s=0;for(let i=0;i<a.length;i++)s+=(a[i]-b[i])**2;return Math.sqrt(s)}
+function manhattan(a,b){let s=0;for(let i=0;i<a.length;i++)s+=Math.abs(a[i]-b[i]);return s}
+function cosineSim(a,b){let d=0,na=0,nb=0;for(let i=0;i<a.length;i++){d+=a[i]*b[i];na+=a[i]**2;nb+=b[i]**2}return d/(Math.sqrt(na)*Math.sqrt(nb)+1e-10)}
+
+function distMatrix(X, fn) {
+    const n=X.length, M=[];
+    for(let i=0;i<n;i++){M[i]=[];for(let j=0;j<n;j++)M[i][j]=fn(X[i],X[j])}
+    return M;
+}
+
+function renderDistances() {
+    if (!DATA.X) return;
+    const X=DATA.X, y=DATA.y;
+    const a=+$('#ptA').value, b=+$('#ptB').value;
+    if(a>=X.length) $('#ptA').value=0;
+    if(b>=X.length) $('#ptB').value=Math.min(1,X.length-1);
+    const ia=+$('#ptA').value, ib=+$('#ptB').value;
+
+    const de=euclidean(X[ia],X[ib]), dm=manhattan(X[ia],X[ib]), dc=cosineSim(X[ia],X[ib]);
+    $('#distMetrics').innerHTML=`
+        <div class="metric"><div class="val">${de.toFixed(4)}</div><div class="lbl">Euklidisch</div></div>
+        <div class="metric"><div class="val">${dm.toFixed(4)}</div><div class="lbl">Manhattan</div></div>
+        <div class="metric"><div class="val">${dc.toFixed(4)}</div><div class="lbl">Cosinus-Ähnlichkeit</div></div>`;
+
+    // Scatter with selected points
+    const labels=[...new Set(y.filter(l=>l>=0))].sort(), traces=[];
+    for(const l of labels){const idx=y.map((v,i)=>[v,i]).filter(([v])=>v===l).map(([,i])=>i);traces.push({x:idx.map(i=>X[i][0]),y:idx.map(i=>X[i][1]),mode:'markers',marker:{size:5,color:COLORS[l%COLORS.length],opacity:.5},name:'C'+l,type:'scatter'})}
+    traces.push({x:[X[ia][0],X[ib][0]],y:[X[ia][1],X[ib][1]],mode:'markers+lines',marker:{size:14,color:'red',symbol:'diamond'},line:{color:'red',dash:'dash',width:2},name:`A(${ia})→B(${ib})`,type:'scatter'});
+    Plotly.newPlot('plotDistPts',traces,plotlyLayout('Ausgewählte Punkte','F1','F2',350),{responsive:true});
+
+    // Heatmaps (subsample)
+    const maxN=Math.min(40,X.length);
+    const idx=[];for(let i=0;i<maxN;i++)idx.push(Math.floor(i*X.length/maxN));
+    const sub=idx.map(i=>X[i]);
+    const ME=distMatrix(sub,euclidean), MM=distMatrix(sub,manhattan), MC=distMatrix(sub,cosineSim);
+    Plotly.newPlot('plotHeatEuc',[{z:ME,type:'heatmap',colorscale:'Blues'}],{...plotlyLayout('Euklidisch','','',350),margin:{t:35,b:20,l:20,r:20}},{responsive:true});
+    Plotly.newPlot('plotHeatMan',[{z:MM,type:'heatmap',colorscale:'Greens'}],{...plotlyLayout('Manhattan','','',350),margin:{t:35,b:20,l:20,r:20}},{responsive:true});
+    Plotly.newPlot('plotHeatCos',[{z:MC,type:'heatmap',colorscale:'RdBu',zmin:-1,zmax:1}],{...plotlyLayout('Cosinus-Ähnlichkeit','','',350),margin:{t:35,b:20,l:20,r:20}},{responsive:true});
+}
+
+// ============================================================
+//  SCALING
+// ============================================================
+function scaleData(X, method) {
+    const n=X.length, d=X[0].length, out=X.map(r=>[...r]);
+    for (let j=0;j<d;j++) {
+        const col=X.map(r=>r[j]).sort((a,b)=>a-b);
+        if (method==='standard') {
+            const mean=col.reduce((a,b)=>a+b,0)/n;
+            const std=Math.sqrt(col.reduce((a,b)=>a+(b-mean)**2,0)/n)||1;
+            for(let i=0;i<n;i++) out[i][j]=(X[i][j]-mean)/std;
+        } else if (method==='minmax') {
+            const mn=col[0], mx=col[col.length-1], r=mx-mn||1;
+            for(let i=0;i<n;i++) out[i][j]=(X[i][j]-mn)/r;
+        } else {
+            const med=col[Math.floor(n/2)];
+            const q1=col[Math.floor(n/4)], q3=col[Math.floor(3*n/4)], iqr=q3-q1||1;
+            for(let i=0;i<n;i++) out[i][j]=(X[i][j]-med)/iqr;
         }
+    }
+    return out;
+}
 
-        main().catch(err => {
-            document.getElementById("load-status").textContent =
-                "Fehler beim Laden: " + err.message;
-            console.error(err);
-        });
-    </script>
+function renderScaling() {
+    if (!DATA.X) return;
+    const method=$('#scalerType').value;
+    const names={standard:'StandardScaler',minmax:'MinMaxScaler',robust:'RobustScaler'};
+    $('#scaleAfterTitle').textContent='Skaliert ('+names[method]+')';
+    const X=DATA.X, y=DATA.y, Xs=scaleData(X,method);
+    DATA.scaled=Xs;
+
+    const makeTrace=(D,title)=>{const labels=[...new Set(y.filter(l=>l>=0))].sort();const tr=[];for(const l of labels){const idx=y.map((v,i)=>[v,i]).filter(([v])=>v===l).map(([,i])=>i);tr.push({x:idx.map(i=>D[i][0]),y:idx.map(i=>D[i][1]),mode:'markers',marker:{size:5,color:COLORS[l%COLORS.length],opacity:.7},name:'C'+l,type:'scatter'})}return tr};
+    Plotly.newPlot('plotScaleBefore',makeTrace(X),plotlyLayout('Original','F1','F2',380),{responsive:true});
+    Plotly.newPlot('plotScaleAfter',makeTrace(Xs),plotlyLayout(names[method],'F1','F2',380),{responsive:true});
+
+    // Stats table
+    const stats=(D,label)=>{const c0=D.map(r=>r[0]),c1=D.map(r=>r[1]);const s=(c)=>({mean:(c.reduce((a,b)=>a+b,0)/c.length).toFixed(3),std:Math.sqrt(c.reduce((a,b)=>a+(b-c.reduce((x,y)=>x+y,0)/c.length)**2,0)/c.length).toFixed(3),min:Math.min(...c).toFixed(3),max:Math.max(...c).toFixed(3)});return[s(c0),s(c1)]};
+    const sb=stats(X,'vorher'),sa=stats(Xs,'nachher');
+    $('#scaleStats').innerHTML=`<table><tr><th>Feature</th><th>Mean (vorher)</th><th>Std (vorher)</th><th>Min</th><th>Max</th><th>Mean (nachher)</th><th>Std (nachher)</th><th>Min</th><th>Max</th></tr>
+    <tr><td>F1</td><td>${sb[0].mean}</td><td>${sb[0].std}</td><td>${sb[0].min}</td><td>${sb[0].max}</td><td>${sa[0].mean}</td><td>${sa[0].std}</td><td>${sa[0].min}</td><td>${sa[0].max}</td></tr>
+    <tr><td>F2</td><td>${sb[1].mean}</td><td>${sb[1].std}</td><td>${sb[1].min}</td><td>${sb[1].max}</td><td>${sa[1].mean}</td><td>${sa[1].std}</td><td>${sa[1].min}</td><td>${sa[1].max}</td></tr></table>`;
+
+    // Distance impact
+    if(X.length>=2){
+        const db={e:euclidean(X[0],X[1]),m:manhattan(X[0],X[1]),c:cosineSim(X[0],X[1])};
+        const da={e:euclidean(Xs[0],Xs[1]),m:manhattan(Xs[0],Xs[1]),c:cosineSim(Xs[0],Xs[1])};
+        const pct=(a,b)=>b?((a-b)/Math.abs(b)*100).toFixed(1):'—';
+        $('#scaleDistMetrics').innerHTML=`
+        <div class="metric"><div class="val">${da.e.toFixed(4)}</div><div class="lbl">Euklidisch (${pct(da.e,db.e)}%)</div></div>
+        <div class="metric"><div class="val">${da.m.toFixed(4)}</div><div class="lbl">Manhattan (${pct(da.m,db.m)}%)</div></div>
+        <div class="metric"><div class="val">${da.c.toFixed(4)}</div><div class="lbl">Cosinus (${pct(da.c,db.c)}%)</div></div>`;
+    }
+}
+
+// ============================================================
+//  PCA
+// ============================================================
+function pca(X, nComp) {
+    const n=X.length, d=X[0].length;
+    // Center
+    const mean=new Array(d).fill(0);
+    for(const r of X) for(let j=0;j<d;j++) mean[j]+=r[j]/n;
+    const C=X.map(r=>r.map((v,j)=>v-mean[j]));
+    // Covariance
+    const cov=[];
+    for(let i=0;i<d;i++){cov[i]=[];for(let j=0;j<d;j++){let s=0;for(let k=0;k<n;k++)s+=C[k][i]*C[k][j];cov[i][j]=s/(n-1)}}
+    // Power iteration for top eigenvectors
+    const eigenvectors=[];
+    const covCopy=cov.map(r=>[...r]);
+    for(let c=0;c<Math.min(nComp,d);c++){
+        let v=new Array(d).fill(0).map(()=>Math.random()-0.5);
+        for(let iter=0;iter<200;iter++){
+            const nv=new Array(d).fill(0);
+            for(let i=0;i<d;i++)for(let j=0;j<d;j++)nv[i]+=covCopy[i][j]*v[j];
+            const norm=Math.sqrt(nv.reduce((a,b)=>a+b*b,0))||1;
+            v=nv.map(x=>x/norm);
+        }
+        eigenvectors.push(v);
+        // Deflate
+        const lambda=v.reduce((s,vi,i)=>{let t=0;for(let j=0;j<d;j++)t+=covCopy[i][j]*v[j];return s+vi*t},0);
+        for(let i=0;i<d;i++)for(let j=0;j<d;j++)covCopy[i][j]-=lambda*v[i]*v[j];
+    }
+    // Project
+    const projected=C.map(r=>eigenvectors.map(ev=>ev.reduce((s,v,i)=>s+v*r[i],0)));
+    // Variance explained
+    const totalVar=cov.reduce((s,r,i)=>s+r[i],0);
+    const varExplained=eigenvectors.map(ev=>{const l=ev.reduce((s,vi,i)=>{let t=0;for(let j=0;j<d;j++)t+=cov[i][j]*ev[j];return s+vi*t},0);return l/totalVar});
+    return {projected, varExplained, eigenvectors};
+}
+
+// ============================================================
+//  t-SNE (simplified Barnes-Hut)
+// ============================================================
+function tsne(X, perplexity, nIter) {
+    const n=X.length;
+    // Pairwise distances
+    const D=[];for(let i=0;i<n;i++){D[i]=[];for(let j=0;j<n;j++){let s=0;for(let k=0;k<X[i].length;k++)s+=(X[i][k]-X[j][k])**2;D[i][j]=s}}
+    // Compute P (joint probabilities)
+    const P=[];for(let i=0;i<n;i++)P[i]=new Float64Array(n);
+    for(let i=0;i<n;i++){
+        let lo=1e-10,hi=1e4,sigma=1;
+        for(let iter=0;iter<50;iter++){
+            sigma=(lo+hi)/2;
+            let sumP=0;
+            for(let j=0;j<n;j++){if(j===i)continue;P[i][j]=Math.exp(-D[i][j]/(2*sigma*sigma));sumP+=P[i][j]}
+            let H=0;for(let j=0;j<n;j++){if(j===i)continue;const p=P[i][j]/(sumP+1e-10);if(p>1e-10)H-=p*Math.log2(p)}
+            if(H>Math.log2(perplexity))hi=sigma;else lo=sigma;
+        }
+        let sumP=0;for(let j=0;j<n;j++)sumP+=P[i][j];
+        for(let j=0;j<n;j++)P[i][j]/=(sumP+1e-10);
+    }
+    // Symmetrize
+    for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const v=(P[i][j]+P[j][i])/(2*n);P[i][j]=v;P[j][i]=v}
+    // Initialize Y randomly
+    const Y=[];for(let i=0;i<n;i++)Y.push([(Math.random()-.5)*.01,(Math.random()-.5)*.01]);
+    const gains=[];for(let i=0;i<n;i++)gains.push([1,1]);
+    const vel=[];for(let i=0;i<n;i++)vel.push([0,0]);
+    const lr=100, mom=0.5;
+    for(let t=0;t<nIter;t++){
+        // Q
+        const Qnum=[];let sumQ=0;
+        for(let i=0;i<n;i++){Qnum[i]=[];for(let j=0;j<n;j++){const d=1/(1+(Y[i][0]-Y[j][0])**2+(Y[i][1]-Y[j][1])**2);Qnum[i][j]=(i===j)?0:d;sumQ+=d}}
+        // Gradient
+        const grad=[];for(let i=0;i<n;i++)grad.push([0,0]);
+        for(let i=0;i<n;i++)for(let j=0;j<n;j++){
+            const q=Qnum[i][j]/(sumQ+1e-10);
+            const mult=4*(P[i][j]-q)*Qnum[i][j];
+            grad[i][0]+=mult*(Y[i][0]-Y[j][0]);
+            grad[i][1]+=mult*(Y[i][1]-Y[j][1]);
+        }
+        for(let i=0;i<n;i++)for(let d=0;d<2;d++){
+            gains[i][d]=(Math.sign(grad[i][d])!==Math.sign(vel[i][d]))?gains[i][d]+.2:gains[i][d]*.8;
+            if(gains[i][d]<.01)gains[i][d]=.01;
+            vel[i][d]=mom*vel[i][d]-lr*gains[i][d]*grad[i][d];
+            Y[i][d]+=vel[i][d];
+        }
+    }
+    return Y;
+}
+
+function renderDimRed() {
+    if(!DATA.X) return;
+    const X=DATA.scaled||DATA.X, y=DATA.y;
+    // PCA
+    const p=pca(X,2);
+    DATA.pcaResult=p;
+    const makeTraces=(pts,c1,c2)=>{const labels=[...new Set(y.filter(l=>l>=0))].sort();return labels.map(l=>{const idx=y.map((v,i)=>[v,i]).filter(([v])=>v===l).map(([,i])=>i);return{x:idx.map(i=>pts[i][0]),y:idx.map(i=>pts[i][1]),mode:'markers',marker:{size:5,color:COLORS[l%COLORS.length],opacity:.7},name:'C'+l,type:'scatter'}})};
+    Plotly.newPlot('plotPCA',makeTraces(p.projected),plotlyLayout('PCA','PC1','PC2',420),{responsive:true});
+
+    // t-SNE
+    const perp=+$('#tsnePerplexity').value;
+    const maxPts=Math.min(X.length,500);
+    const Xsub=X.slice(0,maxPts);
+    const ySub=y.slice(0,maxPts);
+    const T=tsne(Xsub,perp,300);
+    DATA.tsneResult=T;
+    const tTraces=[];
+    const labelsT=[...new Set(ySub.filter(l=>l>=0))].sort();
+    for(const l of labelsT){const idx=ySub.map((v,i)=>[v,i]).filter(([v])=>v===l).map(([,i])=>i);tTraces.push({x:idx.map(i=>T[i][0]),y:idx.map(i=>T[i][1]),mode:'markers',marker:{size:5,color:COLORS[l%COLORS.length],opacity:.7},name:'C'+l,type:'scatter'})}
+    Plotly.newPlot('plotTSNE',tTraces,plotlyLayout('t-SNE','Dim 1','Dim 2',420),{responsive:true});
+
+    // Variance explained
+    const pFull=pca(X,Math.min(X[0].length,10));
+    const cumVar=[];let cv=0;
+    for(const v of pFull.varExplained){cv+=v;cumVar.push(cv)}
+    Plotly.newPlot('plotVariance',[
+        {x:pFull.varExplained.map((_,i)=>'PC'+(i+1)),y:pFull.varExplained,type:'bar',name:'Einzeln',marker:{color:'#2196f3'}},
+        {x:pFull.varExplained.map((_,i)=>'PC'+(i+1)),y:cumVar,type:'scatter',mode:'lines+markers',name:'Kumulativ',line:{color:'#ff9800',width:3}}
+    ],plotlyLayout('Explained Variance Ratio','','Varianzanteil',300),{responsive:true});
+}
+
+// ============================================================
+//  K-MEANS
+// ============================================================
+function kmeans(X, k, maxIter) {
+    const n=X.length, d=X[0].length;
+    // k-means++ init
+    const centers=[X[Math.floor(rng()*n)].slice()];
+    while(centers.length<k){
+        const dists=X.map(p=>{let mn=Infinity;for(const c of centers){let s=0;for(let j=0;j<d;j++)s+=(p[j]-c[j])**2;mn=Math.min(mn,s)}return mn});
+        const total=dists.reduce((a,b)=>a+b,0);
+        let r=rng()*total, cum=0;
+        for(let i=0;i<n;i++){cum+=dists[i];if(cum>=r){centers.push(X[i].slice());break}}
+    }
+    let labels=new Array(n).fill(0);
+    for(let iter=0;iter<(maxIter||30);iter++){
+        // Assign
+        for(let i=0;i<n;i++){let mn=Infinity,best=0;for(let c=0;c<k;c++){let s=0;for(let j=0;j<d;j++)s+=(X[i][j]-centers[c][j])**2;if(s<mn){mn=s;best=c}}labels[i]=best}
+        // Update
+        const sums=Array.from({length:k},()=>new Array(d).fill(0));
+        const counts=new Array(k).fill(0);
+        for(let i=0;i<n;i++){counts[labels[i]]++;for(let j=0;j<d;j++)sums[labels[i]][j]+=X[i][j]}
+        for(let c=0;c<k;c++)for(let j=0;j<d;j++)centers[c][j]=counts[c]?sums[c][j]/counts[c]:centers[c][j];
+    }
+    const inertia=X.reduce((s,p,i)=>{let d2=0;for(let j=0;j<d;j++)d2+=(p[j]-centers[labels[i]][j])**2;return s+d2},0);
+    return {labels, centers, inertia};
+}
+
+// ============================================================
+//  AGGLOMERATIVE CLUSTERING
+// ============================================================
+function agglomerative(X, k, linkage) {
+    const n=X.length;
+    // Distance matrix
+    const D=[];for(let i=0;i<n;i++){D[i]=[];for(let j=0;j<n;j++)D[i][j]=euclidean(X[i],X[j])}
+    const clusters=Array.from({length:n},(_,i)=>[i]);
+    const active=new Set(Array.from({length:n},(_,i)=>i));
+    while(active.size>k){
+        let minD=Infinity,mi=-1,mj=-1;
+        const act=[...active];
+        for(let ii=0;ii<act.length;ii++)for(let jj=ii+1;jj<act.length;jj++){
+            const ci=act[ii],cj=act[jj];
+            let d;
+            if(linkage==='single'){d=Infinity;for(const a of clusters[ci])for(const b of clusters[cj])d=Math.min(d,D[a][b])}
+            else if(linkage==='complete'){d=0;for(const a of clusters[ci])for(const b of clusters[cj])d=Math.max(d,D[a][b])}
+            else if(linkage==='average'){d=0;let cnt=0;for(const a of clusters[ci])for(const b of clusters[cj]){d+=D[a][b];cnt++}d/=cnt}
+            else{/* ward */const merged=[...clusters[ci],...clusters[cj]];const mean=k=>merged.reduce((s,i)=>s+X[i][k],0)/merged.length;d=0;for(const i of merged)for(let dd=0;dd<X[0].length;dd++)d+=(X[i][dd]-mean(dd))**2;const m1=k=>clusters[ci].reduce((s,i)=>s+X[i][k],0)/clusters[ci].length;const m2=k=>clusters[cj].reduce((s,i)=>s+X[i][k],0)/clusters[cj].length;let w1=0,w2=0;for(const i of clusters[ci])for(let dd=0;dd<X[0].length;dd++)w1+=(X[i][dd]-m1(dd))**2;for(const i of clusters[cj])for(let dd=0;dd<X[0].length;dd++)w2+=(X[i][dd]-m2(dd))**2;d=d-w1-w2}
+            if(d<minD){minD=d;mi=ci;mj=cj}
+        }
+        clusters[mi]=[...clusters[mi],...clusters[mj]];
+        active.delete(mj);
+    }
+    const labels=new Array(n).fill(0);
+    let lbl=0;
+    for(const ci of active){for(const i of clusters[ci])labels[i]=lbl;lbl++}
+    return labels;
+}
+
+// ============================================================
+//  SILHOUETTE SCORE
+// ============================================================
+function silhouetteScore(X, labels) {
+    const n=X.length, k=Math.max(...labels)+1;
+    let total=0, count=0;
+    for(let i=0;i<n;i++){
+        const ci=labels[i];
+        // a: mean dist to same cluster
+        let aSum=0,aCnt=0;
+        for(let j=0;j<n;j++){if(j===i||labels[j]!==ci)continue;aSum+=euclidean(X[i],X[j]);aCnt++}
+        const a=aCnt?aSum/aCnt:0;
+        // b: min mean dist to other clusters
+        let b=Infinity;
+        for(let c=0;c<k;c++){if(c===ci)continue;let s=0,cnt=0;for(let j=0;j<n;j++){if(labels[j]!==c)continue;s+=euclidean(X[i],X[j]);cnt++}if(cnt)b=Math.min(b,s/cnt)}
+        if(b===Infinity)b=0;
+        const s=Math.max(a,b)>0?(b-a)/Math.max(a,b):0;
+        total+=s;count++;
+    }
+    return count?total/count:0;
+}
+
+function renderClusterTab(){
+    if(!DATA.X) return;
+    const X=DATA.scaled||DATA.X;
+    // Elbow + Silhouette
+    const inertias=[], silScores=[], ks=[];
+    for(let k=2;k<=10;k++){
+        const r=kmeans(X,k,20);
+        ks.push(k); inertias.push(r.inertia);
+        // Subsample silhouette for speed
+        const maxS=Math.min(X.length,300);
+        const Xsub=X.slice(0,maxS), lSub=r.labels.slice(0,maxS);
+        silScores.push(silhouetteScore(Xsub,lSub));
+    }
+    // Knee detection
+    const d1=inertias.map((v,i)=>i>0?inertias[i-1]-v:0);
+    const d2=d1.map((v,i)=>i>0?d1[i-1]-v:0);
+    let kneeK=ks[2];let maxD2=0;for(let i=2;i<d2.length;i++){if(d2[i]>maxD2){maxD2=d2[i];kneeK=ks[i]}}
+    const bestSilK=ks[silScores.indexOf(Math.max(...silScores))];
+
+    Plotly.newPlot('plotElbow',[
+        {x:ks,y:inertias,mode:'lines+markers',line:{color:'#2196f3',width:3},marker:{size:8},name:'Inertia'},
+        {x:[kneeK],y:[inertias[kneeK-2]],mode:'markers',marker:{size:16,color:'#ff5722',symbol:'star'},name:'Ellbogen k='+kneeK}
+    ],plotlyLayout('Elbow-Methode','k','Inertia',320),{responsive:true});
+    Plotly.newPlot('plotSilScore',[
+        {x:ks,y:silScores,mode:'lines+markers',line:{color:'#4caf50',width:3},marker:{size:8},name:'Silhouette'},
+        {x:[bestSilK],y:[silScores[bestSilK-2]],mode:'markers',marker:{size:16,color:'#ff9800',symbol:'star'},name:'Best k='+bestSilK}
+    ],plotlyLayout('Silhouette Score','k','Score',320),{responsive:true});
+    $('#clusterRecommendation').innerHTML=`<b>Empfehlung:</b> Elbow → k=${kneeK} | Silhouette → k=${bestSilK} | Ground Truth → k=${DATA.nClusters}`;
+    $('#kChosen').value=kneeK;$('#kChosenVal').textContent=kneeK;
+    renderClustering();
+}
+
+function renderClustering(){
+    if(!DATA.X) return;
+    const X=DATA.scaled||DATA.X, y=DATA.y;
+    const k=+$('#kChosen').value, linkage=$('#linkageMethod').value;
+    seedRng(42);
+    const km=kmeans(X,k,30);
+    DATA.kmResult=km;
+    const agg=agglomerative(X.length>500?X.slice(0,500):X, k, linkage);
+    const aggLabels=X.length>500?[...agg,...new Array(X.length-500).fill(0)]:agg;
+
+    // K-Means plot with centroids
+    const kmTraces=[];
+    for(let c=0;c<k;c++){const idx=km.labels.map((v,i)=>[v,i]).filter(([v])=>v===c).map(([,i])=>i);kmTraces.push({x:idx.map(i=>X[i][0]),y:idx.map(i=>X[i][1]),mode:'markers',marker:{size:5,color:COLORS[c%COLORS.length],opacity:.7},name:'C'+c,type:'scatter'})}
+    kmTraces.push({x:km.centers.map(c=>c[0]),y:km.centers.map(c=>c[1]),mode:'markers',marker:{size:18,color:'black',symbol:'cross',line:{width:2,color:'white'}},name:'Zentroide',type:'scatter'});
+    Plotly.newPlot('plotKMeans',kmTraces,plotlyLayout('K-Means (k='+k+')','F1','F2',380),{responsive:true});
+
+    // Agglomerative plot
+    const aggTraces=[];
+    for(let c=0;c<k;c++){const idx=aggLabels.map((v,i)=>[v,i]).filter(([v])=>v===c).map(([,i])=>i);aggTraces.push({x:idx.map(i=>X[i][0]),y:idx.map(i=>X[i][1]),mode:'markers',marker:{size:5,color:COLORS[c%COLORS.length],opacity:.7},name:'C'+c,type:'scatter'})}
+    Plotly.newPlot('plotAgglo',aggTraces,plotlyLayout('Agglomerativ ('+linkage+', k='+k+')','F1','F2',380),{responsive:true});
+
+    // Metrics
+    const maxS=Math.min(X.length,300);
+    const kmSil=silhouetteScore(X.slice(0,maxS),km.labels.slice(0,maxS));
+    const agSil=silhouetteScore(X.slice(0,maxS),aggLabels.slice(0,maxS));
+    $('#clusterMetrics').innerHTML=`<table><tr><th>Metrik</th><th>K-Means</th><th>Agglomerativ</th></tr>
+    <tr><td>Silhouette Score</td><td>${kmSil.toFixed(4)}</td><td>${agSil.toFixed(4)}</td></tr>
+    <tr><td>Inertia</td><td>${km.inertia.toFixed(1)}</td><td>—</td></tr></table>
+    <div class="success"><b>${kmSil>agSil?'K-Means':'Agglomerativ'}</b> hat den besseren Silhouette Score (${Math.max(kmSil,agSil).toFixed(4)} vs. ${Math.min(kmSil,agSil).toFixed(4)}).</div>`;
+}
+
+// ============================================================
+//  DBSCAN
+// ============================================================
+function dbscan(X, eps, minPts) {
+    const n=X.length, labels=new Array(n).fill(-1);
+    let clusterId=0;
+    for(let i=0;i<n;i++){
+        if(labels[i]!==-1)continue;
+        const neighbors=[];for(let j=0;j<n;j++)if(euclidean(X[i],X[j])<=eps)neighbors.push(j);
+        if(neighbors.length<minPts)continue;
+        labels[i]=clusterId;
+        const queue=[...neighbors];
+        while(queue.length){
+            const q=queue.shift();
+            if(labels[q]===-1||labels[q]===-2){
+                labels[q]=clusterId;
+                const nn=[];for(let j=0;j<n;j++)if(euclidean(X[q],X[j])<=eps)nn.push(j);
+                if(nn.length>=minPts)for(const nj of nn)if(labels[nj]===-1)queue.push(nj);
+            }
+        }
+        clusterId++;
+    }
+    return labels;
+}
+
+// ============================================================
+//  ANOMALY DETECTION
+// ============================================================
+function renderAnomalies(){
+    if(!DATA.X||!DATA.kmResult) return;
+    const X=DATA.scaled||DATA.X, km=DATA.kmResult, mask=DATA.outlierMask;
+    const hasGT=mask.some(v=>v);
+    $('#anomalyGTInfo').innerHTML=hasGT?`<div class="success">Ground Truth: ${mask.filter(v=>v).length} injizierte Outlier.</div>`:`<div class="info">Keine Outlier injiziert. Aktiviere Outlier in Tab 1 für Precision/Recall.</div>`;
+
+    // Cluster-based
+    const thresh=+$('#anomThresh').value;
+    const dists=X.map(p=>{let mn=Infinity;for(const c of km.centers){const d=euclidean(p,c);if(d<mn)mn=d}return mn});
+    const sorted=[...dists].sort((a,b)=>a-b);
+    const cutoff=sorted[Math.floor(sorted.length*thresh/100)];
+    const anomCluster=dists.map(d=>d>cutoff);
+
+    const normalC=X.map((p,i)=>[p,i]).filter(([,i])=>!anomCluster[i]);
+    const anomC=X.map((p,i)=>[p,i]).filter(([,i])=>anomCluster[i]);
+    Plotly.newPlot('plotAnomCluster',[
+        {x:normalC.map(([p])=>p[0]),y:normalC.map(([p])=>p[1]),mode:'markers',marker:{size:5,color:'#4488ff',opacity:.5},name:'Normal',type:'scatter'},
+        {x:anomC.map(([p])=>p[0]),y:anomC.map(([p])=>p[1]),mode:'markers',marker:{size:9,color:'#f44336',symbol:'x'},name:'Anomalie',type:'scatter'}
+    ],plotlyLayout(`Cluster-basiert (${thresh}. Perzentil)`,'F1','F2',380),{responsive:true});
+
+    // DBSCAN
+    const eps=+$('#dbEps').value, minS=+$('#dbMin').value;
+    const dbLabels=dbscan(X,eps,minS);
+    const anomDB=dbLabels.map(l=>l===-1);
+    const normalD=X.map((p,i)=>[p,i]).filter(([,i])=>!anomDB[i]);
+    const anomD=X.map((p,i)=>[p,i]).filter(([,i])=>anomDB[i]);
+    Plotly.newPlot('plotAnomDBSCAN',[
+        {x:normalD.map(([p])=>p[0]),y:normalD.map(([p])=>p[1]),mode:'markers',marker:{size:5,color:'#4488ff',opacity:.5},name:'Normal',type:'scatter'},
+        {x:anomD.map(([p])=>p[0]),y:anomD.map(([p])=>p[1]),mode:'markers',marker:{size:9,color:'#f44336',symbol:'x'},name:'Anomalie (Noise)',type:'scatter'}
+    ],plotlyLayout(`DBSCAN (eps=${eps}, min=${minS})`,'F1','F2',380),{responsive:true});
+
+    // Metrics
+    const nC=anomCluster.filter(v=>v).length, nD=anomDB.filter(v=>v).length;
+    let metricsHtml=`<div class="metric"><div class="val">${nC}</div><div class="lbl">Cluster-basiert</div></div>
+    <div class="metric"><div class="val">${nD}</div><div class="lbl">DBSCAN</div></div>`;
+    if(hasGT){
+        const prec=(pred,gt)=>{let tp=0,fp=0;pred.forEach((v,i)=>{if(v){if(gt[i])tp++;else fp++}});return tp/(tp+fp+1e-10)};
+        const rec=(pred,gt)=>{let tp=0,fn=0;gt.forEach((v,i)=>{if(v){if(pred[i])tp++;else fn++}});return tp/(tp+fn+1e-10)};
+        const f1=(p,r)=>2*p*r/(p+r+1e-10);
+        const pC=prec(anomCluster,mask),rC=rec(anomCluster,mask),pD=prec(anomDB,mask),rD=rec(anomDB,mask);
+        metricsHtml+=`<div class="metric"><div class="val">${f1(pC,rC).toFixed(3)}</div><div class="lbl">F1 Cluster</div></div>
+        <div class="metric"><div class="val">${f1(pD,rD).toFixed(3)}</div><div class="lbl">F1 DBSCAN</div></div>`;
+    }
+    $('#anomalyMetrics').innerHTML=metricsHtml;
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+generateAndRender();
+</script>
 </body>
 </html>

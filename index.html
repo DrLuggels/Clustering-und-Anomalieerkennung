@@ -85,7 +85,14 @@
             const files = {};
             await Promise.all(filePaths.map(async (path) => {
                 const resp = await fetch(path);
-                if (!resp.ok) throw new Error("Failed to fetch " + path + ": " + resp.status);
+                // __init__.py can be empty/missing — treat as empty string
+                if (!resp.ok) {
+                    if (path.endsWith("__init__.py")) {
+                        files[path] = "";
+                        return;
+                    }
+                    throw new Error("Failed to fetch " + path + ": " + resp.status);
+                }
                 files[path] = await resp.text();
             }));
 

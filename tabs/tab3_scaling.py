@@ -44,11 +44,11 @@ def render():
 
     with col_left:
         fig = scatter_2d(df, y, title="Original (unskaliert)", show_legend=False)
-        st.plotly_chart(fig, width="stretch")
+        st.plotly_chart(fig, use_container_width=True)
 
     with col_right:
         fig = scatter_2d(df_scaled, y, title=f"Skaliert ({scaler_name})", show_legend=False)
-        st.plotly_chart(fig, width="stretch")
+        st.plotly_chart(fig, use_container_width=True)
 
     # --- Statistics Table ---
     st.subheader("Feature-Statistiken")
@@ -61,7 +61,7 @@ def render():
 
     stats_combined = pd.concat([stats_before, stats_after], axis=1)
     stats_combined = stats_combined.round(4)
-    st.dataframe(stats_combined, width="stretch")
+    st.dataframe(stats_combined, use_container_width=True)
 
     # --- Distance Impact ---
     st.subheader("Auswirkung auf Distanzen")

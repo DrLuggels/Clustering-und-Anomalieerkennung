@@ -94,12 +94,12 @@ def render():
 
     with col_pca:
         fig_pca = scatter_2d(df_pca, y, title="PCA", col_x=pca_cols[0], col_y=pca_cols[1])
-        st.plotly_chart(fig_pca, width="stretch")
+        st.plotly_chart(fig_pca, use_container_width=True)
 
     with col_red:
         fig_red = scatter_2d(df_red, y, title=reduction_method,
                              col_x=red_cols[0], col_y=red_cols[1])
-        st.plotly_chart(fig_red, width="stretch")
+        st.plotly_chart(fig_red, use_container_width=True)
 
     st.divider()
 
@@ -132,7 +132,7 @@ def render():
             template="plotly_white",
             height=400,
         )
-        st.plotly_chart(fig_var, width="stretch")
+        st.plotly_chart(fig_var, use_container_width=True)
         st.caption(f"Die ersten {n_components_pca} Komponenten erklären "
                    f"**{sum(explained[:n_components_pca])*100:.1f}%** der Gesamtvarianz.")
 
@@ -162,7 +162,7 @@ def render():
                     showarrow=False,
                     font=dict(size=11, color="#FF5722"),
                 )
-            st.plotly_chart(fig_bi, width="stretch")
+            st.plotly_chart(fig_bi, use_container_width=True)
 
     # --- Trustworthiness ---
     st.subheader("Qualitätsvergleich")

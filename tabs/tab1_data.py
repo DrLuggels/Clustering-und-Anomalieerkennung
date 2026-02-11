@@ -64,7 +64,7 @@ def render():
         else:
             fig = scatter_2d(df, y, title="Synthetische Daten",
                              outlier_mask=outlier_mask)
-        st.plotly_chart(fig, width="stretch")
+        st.plotly_chart(fig, use_container_width=True)
 
         # Data summary
         st.subheader("Datensatz-Übersicht")
@@ -75,4 +75,4 @@ def render():
         col4.metric("Outlier", int(outlier_mask.sum()))
 
         with st.expander("Rohdaten anzeigen"):
-            st.dataframe(df.head(20), width="stretch")
+            st.dataframe(df.head(20), use_container_width=True)

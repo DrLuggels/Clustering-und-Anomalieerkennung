@@ -63,12 +63,12 @@ def render():
     with col_elbow:
         st.markdown(ELBOW_INTRO)
         fig_elbow = elbow_chart(k_range, inertias, knee_k)
-        st.plotly_chart(fig_elbow, width="stretch")
+        st.plotly_chart(fig_elbow, use_container_width=True)
 
     with col_sil:
         st.markdown(SILHOUETTE_INTRO)
         fig_sil = silhouette_chart(k_range, sil_scores, best_sil_k)
-        st.plotly_chart(fig_sil, width="stretch")
+        st.plotly_chart(fig_sil, use_container_width=True)
 
     # Recommendation
     rec_k = knee_k if knee_k else best_sil_k
@@ -114,7 +114,7 @@ def render():
         title_left=f"K-Means (k={k_chosen})",
         title_right=f"Agglomerativ ({linkage_method}, k={k_chosen})",
     )
-    st.plotly_chart(fig_compare, width="stretch")
+    st.plotly_chart(fig_compare, use_container_width=True)
 
     # K-Means: show centroids
     st.subheader("K-Means: Zentroide")
@@ -135,7 +135,7 @@ def render():
             marker=dict(size=20, color="black", symbol="cross", line=dict(width=3, color="white")),
             name="Zentroide",
         ))
-        st.plotly_chart(fig_km, width="stretch")
+        st.plotly_chart(fig_km, use_container_width=True)
 
     # Dendrogram
     st.subheader("Agglomerativ: Dendrogram")
@@ -151,7 +151,7 @@ def render():
 
     Z = linkage(X_dendro, method=linkage_method)
     fig_dendro = dendrogram_plot(Z, n_clusters=k_chosen)
-    st.plotly_chart(fig_dendro, width="stretch")
+    st.plotly_chart(fig_dendro, use_container_width=True)
 
     # Silhouette diagram for chosen k
     st.subheader("Silhouette-Diagramm")
@@ -159,11 +159,11 @@ def render():
     with col_s1:
         fig_sil_km = silhouette_diagram(X, km_labels)
         fig_sil_km.update_layout(title="K-Means Silhouette")
-        st.plotly_chart(fig_sil_km, width="stretch")
+        st.plotly_chart(fig_sil_km, use_container_width=True)
     with col_s2:
         fig_sil_agg = silhouette_diagram(X, agg_labels)
         fig_sil_agg.update_layout(title="Agglomerativ Silhouette")
-        st.plotly_chart(fig_sil_agg, width="stretch")
+        st.plotly_chart(fig_sil_agg, use_container_width=True)
 
     # === Metrics comparison ===
     st.subheader("Metriken-Vergleich")
@@ -194,7 +194,7 @@ def render():
         metrics_data["Agglomerativ"].extend([f"{agg_ari:.4f}", f"{agg_nmi:.4f}"])
 
     metrics_df = pd.DataFrame(metrics_data)
-    st.dataframe(metrics_df, width="stretch", hide_index=True)
+    st.dataframe(metrics_df, use_container_width=True, hide_index=True)
 
     # Winner announcement
     if km_sil > agg_sil:

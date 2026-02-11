@@ -57,7 +57,7 @@ def render():
             line=dict(color="red", width=2, dash="dash"),
             name=f"A({idx_a}) → B({idx_b})",
         ))
-        st.plotly_chart(fig, width="stretch")
+        st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("Bitte zwei **verschiedene** Punkte wählen.")
 
@@ -78,14 +78,14 @@ def render():
     col1, col2, col3 = st.columns(3)
     with col1:
         fig = heatmap(matrices["Euklidisch"], title="Euklidisch", colorscale="Blues")
-        st.plotly_chart(fig, width="stretch")
+        st.plotly_chart(fig, use_container_width=True)
     with col2:
         fig = heatmap(matrices["Manhattan"], title="Manhattan", colorscale="Greens")
-        st.plotly_chart(fig, width="stretch")
+        st.plotly_chart(fig, use_container_width=True)
     with col3:
         fig = heatmap(matrices["Cosinus-Ähnlichkeit"], title="Cosinus-Ähnlichkeit",
                       colorscale="RdYlBu", zmin=-1, zmax=1)
-        st.plotly_chart(fig, width="stretch")
+        st.plotly_chart(fig, use_container_width=True)
 
     # --- Statistics ---
     st.subheader("Vergleichs-Statistiken")

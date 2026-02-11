@@ -57,7 +57,7 @@ def render():
         fig = anomaly_scatter(df_viz, distances, anomaly_cluster,
                               title=f"Cluster-basiert (Threshold: {threshold_pct}. Perzentil)",
                               col_x=viz_cols[0], col_y=viz_cols[1])
-        st.plotly_chart(fig, width="stretch")
+        st.plotly_chart(fig, use_container_width=True)
 
         if has_ground_truth:
             col1, col2, col3 = st.columns(3)
@@ -151,7 +151,7 @@ def render():
         ), row=row, col=col)
 
     fig.update_layout(template="plotly_white", height=800, margin=dict(t=50, b=20))
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
     # --- Overlap Analysis ---
     st.subheader("Overlap-Analyse")
@@ -185,7 +185,7 @@ def render():
         template="plotly_white",
         height=400,
     )
-    st.plotly_chart(fig_overlap, width="stretch")
+    st.plotly_chart(fig_overlap, use_container_width=True)
 
     # --- Metrics Table ---
     if has_ground_truth:
@@ -206,7 +206,7 @@ def render():
             })
 
         metrics_df = pd.DataFrame(metrics_rows)
-        st.dataframe(metrics_df, width="stretch", hide_index=True)
+        st.dataframe(metrics_df, use_container_width=True, hide_index=True)
 
         best_f1_idx = np.argmax([f1_score(outlier_mask_true, m, zero_division=0) for m in method_masks])
         st.success(

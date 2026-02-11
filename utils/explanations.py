@@ -45,6 +45,12 @@ Verfahren, das **lokale Nachbarschaften** erhält. Besonders gut für die
 Visualisierung von hochdimensionalen Cluster-Strukturen.
 """
 
+TSNE_INTRO = """
+**t-SNE (t-distributed Stochastic Neighbor Embedding)** ist ein nicht-lineares
+Verfahren, das **lokale Nachbarschaften** erhält. Perplexity steuert,
+wie viele Nachbarn berücksichtigt werden (niedrig = lokal, hoch = global).
+"""
+
 ELBOW_INTRO = """
 Die **Elbow-Methode** plottet die Inertia (Within-Cluster Sum of Squares) gegen
 die Cluster-Anzahl k. Am "Ellbogen" bringt ein weiteres Cluster kaum noch Verbesserung.

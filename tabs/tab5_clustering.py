@@ -5,7 +5,6 @@ import time
 from sklearn.cluster import KMeans, AgglomerativeClustering
 from sklearn.metrics import silhouette_score, adjusted_rand_score, normalized_mutual_info_score
 from scipy.cluster.hierarchy import linkage
-from kneed import KneeLocator
 from utils.viz import (
     elbow_chart, silhouette_chart, silhouette_diagram,
     comparison_scatter_side_by_side, dendrogram_plot, scatter_2d, CLUSTER_COLORS,
@@ -50,10 +49,14 @@ def render():
 
     # Find knee
     try:
+        from kneed import KneeLocator
         kl = KneeLocator(list(k_range), inertias, curve="convex", direction="decreasing")
         knee_k = kl.knee
     except Exception:
-        knee_k = None
+        # Fallback: maximum second derivative
+        diffs = np.diff(inertias)
+        diffs2 = np.diff(diffs)
+        knee_k = list(k_range)[int(np.argmax(diffs2)) + 2] if len(diffs2) > 0 else None
 
     best_sil_k = list(k_range)[np.argmax(sil_scores)]
 

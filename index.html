@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Clustering & Anomalieerkennung</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.73.0/build/stlite.css"
+    />
+    <style>
+        #loading-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        #loading-screen h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #64b5f6;
+        }
+        #loading-screen p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            color: #90a4ae;
+        }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #2a2a4a;
+            border-top: 5px solid #64b5f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1.5rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #load-status {
+            font-size: 0.9rem;
+            color: #78909c;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <h1>Clustering & Anomalieerkennung</h1>
+        <p>Interaktive Demo wird geladen...</p>
+        <div id="load-status">Python-Umgebung wird initialisiert...</div>
+    </div>
+    <div id="root"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.73.0/build/stlite.js"></script>
+    <script>
+        const filePaths = [
+            "app.py",
+            "utils/__init__.py",
+            "utils/data_gen.py",
+            "utils/metrics.py",
+            "utils/viz.py",
+            "utils/explanations.py",
+            "tabs/__init__.py",
+            "tabs/tab1_data.py",
+            "tabs/tab2_distance.py",
+            "tabs/tab3_scaling.py",
+            "tabs/tab4_dimred.py",
+            "tabs/tab5_clustering.py",
+            "tabs/tab6_anomaly.py",
+        ];
+
+        async function main() {
+            const statusEl = document.getElementById("load-status");
+
+            // Fetch all Python files
+            statusEl.textContent = "Lade Python-Dateien...";
+            const files = {};
+            await Promise.all(filePaths.map(async (path) => {
+                const resp = await fetch(path);
+                if (!resp.ok) throw new Error("Failed to fetch " + path + ": " + resp.status);
+                files[path] = await resp.text();
+            }));
+
+            statusEl.textContent = "Starte Streamlit im Browser (kann 30-60s dauern)...";
+
+            // Mount stlite
+            stlite.mount(
+                {
+                    requirements: ["plotly", "scikit-learn", "scipy", "matplotlib"],
+                    entrypoint: "app.py",
+                    files: files,
+                },
+                document.getElementById("root")
+            );
+
+            // Hide loading screen once stlite renders
+            const observer = new MutationObserver(() => {
+                const stApp = document.querySelector('[data-testid="stAppViewContainer"]');
+                if (stApp) {
+                    document.getElementById("loading-screen").style.display = "none";
+                    observer.disconnect();
+                }
+            });
+            observer.observe(document.getElementById("root"), { childList: true, subtree: true });
+
+            // Fallback: hide after 90 seconds regardless
+            setTimeout(() => {
+                document.getElementById("loading-screen").style.display = "none";
+            }, 90000);
+        }
+
+        main().catch(err => {
+            document.getElementById("load-status").textContent =
+                "Fehler beim Laden: " + err.message;
+            console.error(err);
+        });
+    </script>
+</body>
+</html>
